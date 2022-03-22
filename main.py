@@ -3,6 +3,8 @@ import datetime
 from bs4 import BeautifulSoup as bs
 import pandas as pd
 
+month_list = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
 exchange_filter = [
     'Sydney Stock Exchange',
     'Tokyo Stock Exchange',
@@ -34,10 +36,15 @@ def scraper(month):
             if data.find('td', class_ = 'date bold center') is not None:
                 if data.find('td', class_ = 'date bold center').text != '':
                     curr_date = date = data.find('td', class_ = 'date bold center').text
+                
                 else:
                     date = curr_date
+                
                 country = data.find('td', class_= 'bold cur').text
+                country = remove_char(country)
+                
                 exchange = data.find('td', class_=None).text
+                
                 holiday = data.find('td', class_= 'last').text
                 
                 if month in date:
@@ -52,12 +59,34 @@ def scraper(month):
     
     return dataframe
 
+def remove_char(country):
+    char=u'\xa0'
+    if char in country:
+        country = country.replace(char,u'')
+    
+    return country
+
 def main(month):
     filepath = 'data/{}_calendar.csv'.format(month)
     
     calendar = scraper(month)
-    calendar[calendar['Exchange Name'].isin(exchange_filter)].to_csv(filepath)
+    calendar[calendar['Exchange Name'].isin(exchange_filter)].to_csv(filepath, index=False)
     print ('data/{}_calendar.csv saved'.format(month))
-    
+
+def start():
+    while True:
+        usr_in = input('\nenter month name (Jan, Feb, Mar, Apr, etc) or press 0 to exit\n')
+        if usr_in != '0':
+            if usr_in in month_list:
+                main(usr_in)
+            
+            else:
+                print ('wrong month format')
+                continue
+
+        else:
+            print ('\n-->exiting ...\n')
+            break
+
 if __name__ == '__main__':
-    main('Apr')
+    start()
